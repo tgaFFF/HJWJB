@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/__health", "destination": "/api/proxy?__route=__health" },
+    { "source": "/text-proxy", "destination": "/api/proxy?__route=text-proxy" },
+    { "source": "/audio-resolve", "destination": "/api/proxy?__route=audio-resolve" },
+    { "source": "/audio-proxy", "destination": "/api/proxy?__route=audio-proxy" }
+  ]
+}
+
