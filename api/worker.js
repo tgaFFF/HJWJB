@@ -2,7 +2,7 @@
 // This is a copy of `cloudflare-worker.js` so Vercel Serverless Functions can bundle it.
 // (Vercel Node Functions don't automatically include files outside `api/` in the Lambda bundle.)
 
-const SERVER_VERSION = '2026-01-21-worker-proxy-v1';
+const SERVER_VERSION = '2026-02-02-vercel-proxy-v2';
 
 const DEFAULT_UPSTREAM_UA =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36';
@@ -12,8 +12,12 @@ const MAX_TEXT_SNIFF_BYTES = 32768;
 function corsHeaders(extra = {}) {
     const headers = new Headers(extra);
     headers.set('Access-Control-Allow-Origin', '*');
-    headers.set('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS');
-    headers.set('Access-Control-Allow-Headers', 'Range, Content-Type, Accept, Origin, Referer');
+    // Keep in sync with Cloudflare Worker: allow POST/PUT for cross-origin preflight compatibility.
+    headers.set('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
+    headers.set(
+        'Access-Control-Allow-Headers',
+        'Range, Content-Type, Accept, Origin, Referer, Authorization, X-HJWJB-Token, X-User-Token, X-Auth-Token'
+    );
     headers.set(
         'Access-Control-Expose-Headers',
         [
@@ -46,19 +50,24 @@ function isAllowedProxyHost(hostname) {
     if (!hostname) return false;
     const host = hostname.toLowerCase();
     const allowExact = new Set([
-        'jywav.com',
-        'yyfang.top',
-        'www.livepoo.cn',
         'music-api.gdstudio.xyz',
         'music-dl.sayqz.com',
         'api.byfuns.top',
         'api.manhuaidc.cn',
+        'musicapi.chuyel.top',
         'api.obdo.cc',
         'api.baka.plus',
         'api.qijieya.cn',
         'apis.uctb.cn',
         'oiapi.net',
+        // API2 backend (QQ /api/*)
+        'jbjb.qzz.io',
+        // Kuwo API4 (search/song/lyrics/rank/playlist)
+        'kw-api.cenguigui.cn',
+        // Kuwo LRCX (word-level lyrics)
+        'djbsr.de5.net',
         'y.gtimg.cn',
+        'aqqmusic.tc.qq.com',
         'isure6.stream.qqmusic.qq.com',
         'music.126.net',
         'music.joox.com'
@@ -70,9 +79,6 @@ function isAllowedProxyHost(hostname) {
     if (host.endsWith('.sycdn.kuwo.cn')) return true;
     if (host.endsWith('.stream.qqmusic.qq.com')) return true;
     if (host.endsWith('.gtimg.cn')) return true;
-    if (host.endsWith('.yyfang.top')) return true;
-    if (host.endsWith('.jywav.com')) return true;
-    if (host === 'livepoo.cn' || host.endsWith('.livepoo.cn')) return true;
     if (host.endsWith('.sayqz.com')) return true;
     return false;
 }
